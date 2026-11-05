@@ -1,4 +1,3 @@
-
 name: Build Flow Glass Huawei APK
 
 on:
@@ -13,7 +12,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -41,11 +39,8 @@ jobs:
           yes | "$SDKMANAGER" --licenses || true
           "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Extract source archive
-        shell: bash
-        run: |
-          unzip -q FlowGlassHuaweiAppWidget_Source.zip
-          test -f FlowGlassHuaweiAppWidget/app/build.gradle || test -f FlowGlassHuaweiAppWidget/app/build.gradle.kts
+      - name: Extract updated source archive
+        run: unzip -q FlowGlassHuaweiAppWidget_Source_v2.zip
 
       - name: Build debug APK
         run: gradle --no-daemon -p FlowGlassHuaweiAppWidget :app:assembleDebug
@@ -53,7 +48,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FlowGlassHuawei-debug-apk
+          name: FlowGlassHuawei-debug-apk-v2
           path: FlowGlassHuaweiAppWidget/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
