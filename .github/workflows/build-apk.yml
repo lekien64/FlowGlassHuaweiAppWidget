@@ -4,7 +4,8 @@ name: Build Flow Glass Huawei APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -12,6 +13,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -27,14 +29,23 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
-        run: sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Prepare Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          if [ -z "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager not found"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses || true
+          "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Extract source archive
-        run: unzip -q FlowGlassHuaweiAppWidget_Source.zip
+        shell: bash
+        run: |
+          unzip -q FlowGlassHuaweiAppWidget_Source.zip
+          test -f FlowGlassHuaweiAppWidget/app/build.gradle || test -f FlowGlassHuaweiAppWidget/app/build.gradle.kts
 
       - name: Build debug APK
         run: gradle --no-daemon -p FlowGlassHuaweiAppWidget :app:assembleDebug
